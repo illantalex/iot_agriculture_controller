@@ -1,5 +1,6 @@
 import time
 import os
+import re
 import serial
 
 # Replace with your serial port and baud rate
@@ -9,7 +10,7 @@ BAUD_RATE = 9600
 ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=None)
 
 GET_RTC = 'AT+CCLK?'
-
+pattern = r'\d{2}/\d{2}/\d{2},\d{2}:\d{2}:\d{2}'
 
 def init_module():
     send_at_command("ATE0")
@@ -52,7 +53,11 @@ def read_clock():
     response = ser.read(ser.in_waiting).decode()
     print(f'Sent: {GET_RTC}\nResponse: {response}')
     # return response without +CCLK: and OK
-    response = response[response.find('"'):-4].strip().strip('"').split('+')[0]
+    match = re.search(pattern, response)
+    if match:
+        response = match.group()
+    else:
+        response = None
     print("Clock response:", response)
     return response
 
